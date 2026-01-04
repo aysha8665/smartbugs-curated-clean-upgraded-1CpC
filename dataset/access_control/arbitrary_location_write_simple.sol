@@ -3,18 +3,18 @@
  * ======================
  */
 
- pragma solidity ^0.4.25;
+ pragma solidity ^0.8.0;
 
  contract Wallet {
      uint[] private bonusCodes;
      address private owner;
 
-     constructor() public {
+     constructor() {
          bonusCodes = new uint[](0);
          owner = msg.sender;
      }
 
-     function () public payable {
+     receive() external payable {
      }
 
      function PushBonusCode(uint c) public {
@@ -24,7 +24,10 @@
      function PopBonusCode() public {
          
          require(0 <= bonusCodes.length); 
-         bonusCodes.length--; 
+         assembly {
+            let len := sload(bonusCodes.slot)
+            sstore(bonusCodes.slot, sub(len, 1))
+        }
      }
 
      function UpdateBonusCodeAt(uint idx, uint c) public {
@@ -34,6 +37,6 @@
 
      function Destroy() public {
          require(msg.sender == owner);
-         selfdestruct(msg.sender);
+         payable(msg.sender).transfer(address(this).balance);
      }
  }
