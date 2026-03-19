@@ -1,0 +1,17 @@
+[
+  {
+    "vuln_id": "manual_ac_missing_init_001",
+    "vuln_type": "access-control",
+    "tool": "manual_dataset",
+    "severity": "High",
+    "title": "Unprotected Initialization / Constructor Mismatch",
+    "description": "The function `IamMissing` was likely intended to be a constructor but is defined as a regular public function. This allows any attacker to call it after deployment, overwrite the `owner` state variable, and subsequently drain the contract using `withdraw()`.",
+    "location": {
+      "file": "Missing.sol",
+      "contract": "Missing",
+      "function": "IamMissing",
+      "lines": [19, 23]
+    },
+    "code_snippet": "function IamMissing()\n    public\n{\n    owner = msg.sender;\n}"
+  }
+]
