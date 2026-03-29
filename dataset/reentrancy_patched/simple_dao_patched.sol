@@ -15,16 +15,27 @@ contract SimpleDAO {
   }
 
   function withdraw(uint amount) public {
+    // 1. Guard Check
     require(!_locked, "ReentrancyGuard: reentrant call");
     _locked = true;
-    if (credit[msg.sender]>= amount) {
-      credit[msg.sender]-=amount;
-      (bool res, ) = msg.sender.call{value: amount}("");
-    }
+    
+    // 2. Balance Check
+    require(credit[msg.sender] >= amount, "Insufficient balance");
+
+    // 3. Effect
+    credit[msg.sender] -= amount;
+
+    // 4. Interaction
+    (bool success, ) = msg.sender.call{value: amount}("");
+    
+    // 5. CRITICAL: Handle Failure
+    require(success, "Transfer failed"); 
+
+    // 6. Release Guard
     _locked = false;
   }
 
-  function queryCredit(address to) public returns(uint) {
+  function queryCredit(address to) public view returns(uint) {
     return credit[to];
   }
 }
