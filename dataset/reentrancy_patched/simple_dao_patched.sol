@@ -1,41 +1,31 @@
-/*
- * @source: http://blockchain.unica.it/projects/ethereum-survey/attacks.html#simpledao
- * @author: -
- * =======================
- */
-
 pragma solidity ^0.8.0;
 
 contract SimpleDAO {
-  bool private _locked;
-  mapping (address => uint) public credit;
+    mapping (address => uint) public credit;
 
-  function donate(address to) payable public {
-    credit[to] += msg.value;
-  }
+    bool private _locked;
 
-  function withdraw(uint amount) public {
-    // 1. Guard Check
-    require(!_locked, "ReentrancyGuard: reentrant call");
-    _locked = true;
-    
-    // 2. Balance Check
-    require(credit[msg.sender] >= amount, "Insufficient balance");
+    modifier nonReentrant() {
+        require(!_locked, "Reentrant call");
+        _locked = true;
+        _;
+        _locked = false;
+    }
 
-    // 3. Effect
-    credit[msg.sender] -= amount;
+    function donate(address to) payable public {
+        credit[to] += msg.value;
+    }
 
-    // 4. Interaction
-    (bool success, ) = msg.sender.call{value: amount}("");
-    
-    // 5. CRITICAL: Handle Failure
-    require(success, "Transfer failed"); 
+    function withdraw(uint amount) public nonReentrant {   
+        require(credit[msg.sender] >= amount, "Insufficient credit");
 
-    // 6. Release Guard
-    _locked = false;
-  }
+        credit[msg.sender] -= amount;                      
 
-  function queryCredit(address to) public view returns(uint) {
-    return credit[to];
-  }
+        (bool res, ) = msg.sender.call{value: amount}(""); 
+        require(res, "Transfer failed");
+    }
+
+    function queryCredit(address to) public view returns(uint) { 
+        return credit[to];
+    }
 }
