@@ -1,4 +1,3 @@
-
 /*
  * @source: etherscan.io 
  * @author: -
@@ -7,13 +6,13 @@
 
 pragma solidity ^0.8.0;
 
-contract ACCURAL_DEPOSIT
+contract BANK_SAFE
 {
     mapping (address=>uint256) public balances;   
    
-    uint public MinSum = 1 ether;
+    uint public MinSum;
     
-    LogFile Log = LogFile(0x0486cF65A2F2F3A392CBEa398AFB7F5f0B72FF46);
+    LogFile Log;
     
     bool intitalized;
     
@@ -45,15 +44,22 @@ contract ACCURAL_DEPOSIT
         Log.AddMessage(msg.sender,msg.value,"Put");
     }
     
-    function Collect(uint _am) public payable {
-        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am, "Not enough balance"); // 1. Check
-        balances[msg.sender]-=_am; // 1. Effect
-        
-        (bool success, ) = msg.sender.call{value: _am}(""); // 2. Interaction
-        require(success, "Transfer failed"); // 3. Revert if interaction fails
-        
-        Log.AddMessage(msg.sender,_am,"Collect"); 
-
+    function Collect(uint _am)
+    public
+    payable
+    {
+        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am)
+        {
+            
+            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
+            {
+                unchecked
+                {
+                    balances[msg.sender]-=_am;
+                }
+                Log.AddMessage(msg.sender,_am,"Collect");
+            }
+        }
     }
     
     receive() external payable {
